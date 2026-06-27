@@ -1,0 +1,1496 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Vaquinhas Felizes — Gestão Inteligente de Rebanho</title>
+    <!-- Google Fonts: Inter & Playfair Display -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            fontFamily: {
+              sans: ['Inter', 'sans-serif'],
+              serif: ['Playfair Display', 'serif'],
+              mono: ['JetBrains Mono', 'monospace'],
+            }
+          }
+        }
+      }
+    </script>
+    
+    <!-- Lucide Icons CDN -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <!-- Custom CSS for Glassmorphism & Animations -->
+    <style>
+      /* Smooth scrolling and root setup */
+      html {
+        scroll-behavior: smooth;
+      }
+      
+      .serif-title {
+        font-family: 'Playfair Display', serif;
+      }
+
+      /* Glassmorphism utility for Light Theme */
+      .glass-card {
+        background: rgba(255, 255, 255, 0.85);
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+        border: 1px solid rgba(0, 0, 0, 0.08);
+        box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.04);
+      }
+      
+      .glass-card-hover {
+        transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+      }
+      
+      .glass-card-hover:hover {
+        transform: translateY(-4px);
+        background: rgba(255, 255, 255, 0.95);
+        border: 1px solid rgba(0, 0, 0, 0.12);
+        box-shadow: 0 16px 48px 0 rgba(0, 0, 0, 0.08);
+      }
+      
+      /* Glowing pasture effects */
+      .glow-green {
+        background: radial-gradient(circle, rgba(16, 185, 129, 0.08) 0%, rgba(0,0,0,0) 70%);
+      }
+      .glow-indigo {
+        background: radial-gradient(circle, rgba(99, 102, 241, 0.08) 0%, rgba(0,0,0,0) 70%);
+      }
+      
+      /* View transition keyframes */
+      @keyframes viewEnter {
+        from {
+          opacity: 0;
+          transform: translateY(12px) scale(0.99);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0) scale(1);
+        }
+      }
+      
+      .view-active {
+        animation: viewEnter 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+      }
+
+      /* Custom scrollbars */
+      ::-webkit-scrollbar {
+        width: 6px;
+        height: 6px;
+      }
+      ::-webkit-scrollbar-track {
+        background: #FAFAFA;
+      }
+      ::-webkit-scrollbar-thumb {
+        background: rgba(0, 0, 0, 0.1);
+        border-radius: 4px;
+      }
+      ::-webkit-scrollbar-thumb:hover {
+        background: rgba(0, 0, 0, 0.25);
+      }
+
+      /* Custom animations */
+      @keyframes float {
+        0%, 100% { transform: translateY(0px); }
+        50% { transform: translateY(-10px); }
+      }
+      .animate-float {
+        animation: float 6s ease-in-out infinite;
+      }
+    </style>
+  </head>
+  <body class="bg-[#FFFFFF] text-[#111111] min-h-screen relative overflow-x-hidden font-sans">
+    
+    <!-- Abstract Background Shapes matching clean light pasture theme -->
+    <div class="fixed inset-0 pointer-events-none overflow-hidden z-0" id="bg-glow">
+      <div class="absolute top-[-100px] left-[-100px] w-[500px] h-[500px] bg-emerald-100/40 rounded-full blur-[130px] opacity-70 pointer-events-none"></div>
+      <div class="absolute bottom-[-150px] right-[-50px] w-[600px] h-[600px] bg-sky-100/40 rounded-full blur-[120px] opacity-60 pointer-events-none"></div>
+    </div>
+
+    <!-- TOAST NOTIFICATION CONTAINER -->
+    <div id="toast-container" class="fixed top-6 right-6 z-50 flex flex-col gap-3 max-w-sm w-full pointer-events-none"></div>
+
+    <!-- MAIN NAVBAR -->
+    <nav class="fixed top-0 left-0 right-0 z-40 bg-white/70 backdrop-blur-md border-b border-black/5 px-6 py-4">
+      <div class="max-w-7xl mx-auto flex items-center justify-between">
+        
+        <!-- Logo -->
+        <a href="#" onclick="event.preventDefault(); navigateTo('landing');" class="flex items-center gap-2 group" id="nav-logo">
+          <span class="text-2xl filter drop-shadow">🐄</span>
+          <span class="serif-title font-bold text-xl tracking-tight text-neutral-900 group-hover:text-neutral-750 transition-colors">
+            Vaquinhas <span class="font-normal italic text-neutral-600">Felizes</span>
+          </span>
+        </a>
+
+        <!-- Desktop Navigation Items -->
+        <div class="hidden md:flex items-center gap-6" id="nav-desktop-menu">
+          <!-- Dynamic navigation items inserted here by script -->
+        </div>
+
+        <!-- Mobile Hamburguer Button -->
+        <button id="mobile-menu-btn" class="md:hidden flex p-2 text-neutral-500 hover:text-neutral-900 transition-colors" aria-label="Menu principal">
+          <i data-lucide="menu" class="w-6 h-6"></i>
+        </button>
+      </div>
+
+      <!-- Mobile Navigation Drawer -->
+      <div id="nav-mobile-drawer" class="hidden md:hidden mt-4 pt-4 border-t border-black/5 flex-col gap-3 bg-white/95 backdrop-blur-lg rounded-2xl p-4 shadow-xl border border-black/5">
+        <!-- Dynamic mobile navigation items -->
+      </div>
+    </nav>
+
+    <!-- MAIN CONTENT container -->
+    <main class="relative z-10 pt-24 pb-16 min-h-[calc(100vh-80px)] flex flex-col justify-between">
+      
+      <!-- ============================================= -->
+      <!-- 1. LANDING PAGE VIEW -->
+      <!-- ============================================= -->
+      <section id="view-landing" class="view-active max-w-7xl mx-auto px-6 w-full flex flex-col gap-16 py-8">
+        
+        <!-- Hero Grid -->
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
+          <div class="lg:col-span-7 flex flex-col items-start gap-6">
+            <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-neutral-100 border border-neutral-200 text-xs text-neutral-700 font-medium">
+              <span class="flex h-2 w-2 rounded-full bg-emerald-500 animate-pulse"></span>
+              O Futuro do Agronegócio Inteligente
+            </div>
+            
+            <h1 class="serif-title text-4xl md:text-6xl font-bold tracking-tight text-neutral-900 leading-tight md:leading-[1.1]">
+              Gerencie seu <br class="hidden md:inline" />
+              rebanho com <span class="italic font-normal text-emerald-600">inteligência</span>
+            </h1>
+            
+            <p class="text-neutral-600 text-lg leading-relaxed max-w-xl">
+              A plataforma <strong class="text-neutral-900 font-semibold">Vaquinhas Felizes</strong> traz tecnologia de ponta e design inovador para a gestão diária de gado. Monitore peso, saúde, lactação e muito mais em um sistema feito sob medida para o campo moderno.
+            </p>
+            
+            <div class="flex flex-wrap gap-4 mt-2">
+              <button onclick="navigateTo('login')" class="px-8 py-3.5 bg-neutral-900 text-white font-semibold rounded-xl hover:bg-neutral-800 transition-all shadow-lg shadow-neutral-200 active:scale-95 duration-200 cursor-pointer">
+                Entrar na Plataforma
+              </button>
+              <button onclick="scrollToSection('benefits')" class="px-6 py-3.5 border border-neutral-200 bg-neutral-50 text-neutral-700 font-medium rounded-xl hover:bg-neutral-100 transition-all active:scale-95 duration-200 cursor-pointer">
+                Saiba Mais
+              </button>
+            </div>
+          </div>
+          
+          <!-- Interactive Visual Deck (Cow Card Representation with REAL Cow Photo) -->
+          <div class="lg:col-span-5 flex justify-center relative">
+            <div class="glass-card p-6 rounded-3xl w-full max-w-[380px] relative z-10 animate-float border border-neutral-200">
+              <!-- Cow Photo Cover -->
+              <div class="relative w-full h-44 rounded-2xl overflow-hidden mb-5 border border-neutral-100 shadow-inner">
+                <img src="https://images.unsplash.com/photo-1570042225831-d98fa7577f1e?auto=format&fit=crop&w=600&q=80" alt="Vaca Mimosa" class="w-full h-full object-cover" referrerPolicy="no-referrer" />
+                <div class="absolute top-3 right-3 bg-emerald-500 text-white px-3 py-1 rounded-full text-[10px] font-bold tracking-wider uppercase flex items-center gap-1.5 shadow-md">
+                  <span class="w-1.5 h-1.5 rounded-full bg-white animate-pulse"></span>
+                  Lactando
+                </div>
+              </div>
+
+              <div class="flex items-center justify-between border-b border-neutral-100 pb-3 mb-4">
+                <div>
+                  <h4 class="font-bold text-neutral-900 text-lg">Mimosa</h4>
+                  <p class="text-xs text-neutral-500">Raça Holandesa • Registro #0012</p>
+                </div>
+                <div class="w-10 h-10 rounded-xl bg-emerald-50/80 border border-emerald-100 flex items-center justify-center text-xl">
+                  🐄
+                </div>
+              </div>
+              
+              <div class="grid grid-cols-2 gap-4 mb-4">
+                <div class="bg-neutral-50 border border-neutral-100 rounded-2xl p-3">
+                  <span class="text-xs text-neutral-500 block mb-1">Idade</span>
+                  <span class="text-lg font-bold text-neutral-800 font-mono">3.5 <span class="text-xs font-normal text-neutral-500">anos</span></span>
+                </div>
+                <div class="bg-neutral-50 border border-neutral-100 rounded-2xl p-3">
+                  <span class="text-xs text-neutral-500 block mb-1">Peso Atual</span>
+                  <span class="text-lg font-bold text-neutral-800 font-mono">480 <span class="text-xs font-normal text-neutral-500">kg</span></span>
+                </div>
+              </div>
+              
+              <div class="bg-neutral-50 border border-neutral-150 rounded-2xl p-4 flex flex-col gap-3">
+                <div class="flex justify-between items-center text-xs">
+                  <span class="text-neutral-600 font-medium">Produtividade Semanal</span>
+                  <span class="text-emerald-600 font-bold font-mono">92%</span>
+                </div>
+                <div class="w-full bg-neutral-200 rounded-full h-2 overflow-hidden">
+                  <div class="bg-gradient-to-r from-emerald-500 to-indigo-500 h-full rounded-full" style="width: 92%"></div>
+                </div>
+                <div class="flex items-center justify-between text-[11px] text-neutral-500">
+                  <span>Média: 28L/dia</span>
+                  <span>Meta: 30L/dia</span>
+                </div>
+              </div>
+            </div>
+            
+            <!-- Radial background highlight for depth -->
+            <div class="absolute inset-0 bg-gradient-to-tr from-emerald-500/15 to-indigo-500/15 rounded-full filter blur-3xl -z-10"></div>
+          </div>
+        </div>
+
+        <!-- Benefits Section -->
+        <div id="benefits" class="flex flex-col gap-10 scroll-mt-24 pt-8">
+          <div class="text-center max-w-2xl mx-auto flex flex-col gap-3">
+            <h2 class="serif-title text-3xl md:text-4xl font-bold text-neutral-900">
+              Por que escolher a nossa plataforma?
+            </h2>
+            <p class="text-neutral-600 text-sm md:text-base">
+              Desenvolvemos uma experiência inteligente baseada em dados reais e design intuitivo para alavancar a produtividade das suas fazendas.
+            </p>
+          </div>
+          
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <!-- Benefit 1 -->
+            <div class="glass-card glass-card-hover p-6 rounded-2xl flex flex-col gap-4 text-left border border-neutral-200">
+              <div class="w-12 h-12 rounded-xl bg-neutral-100 border border-neutral-200 flex items-center justify-center text-2xl">
+                🐄
+              </div>
+              <h3 class="serif-title text-xl font-bold text-neutral-900">Cadastro Inteligente</h3>
+              <p class="text-neutral-600 text-sm leading-relaxed">
+                Mantenha registros completos de cada bovino, incluindo pesos, idades, raças e status de saúde atualizados instantaneamente.
+              </p>
+            </div>
+            
+            <!-- Benefit 2 -->
+            <div class="glass-card glass-card-hover p-6 rounded-2xl flex flex-col gap-4 text-left border border-neutral-200">
+              <div class="w-12 h-12 rounded-xl bg-neutral-100 border border-neutral-200 flex items-center justify-center text-2xl">
+                📊
+              </div>
+              <h3 class="serif-title text-xl font-bold text-neutral-900">Métricas de Lactação</h3>
+              <p class="text-neutral-600 text-sm leading-relaxed">
+                Identifique instantaneamente quais animais estão gerando retornos de leite, gestantes ou necessitando de monitoramento clínico.
+              </p>
+            </div>
+            
+            <!-- Benefit 3 -->
+            <div class="glass-card glass-card-hover p-6 rounded-2xl flex flex-col gap-4 text-left border border-neutral-200">
+              <div class="w-12 h-12 rounded-xl bg-neutral-100 border border-neutral-200 flex items-center justify-center text-2xl">
+                🌾
+              </div>
+              <h3 class="serif-title text-xl font-bold text-neutral-900">Gestão Unificada</h3>
+              <p class="text-neutral-600 text-sm leading-relaxed">
+                Painéis fáceis de usar que integram fazendas inteiras e produtores, facilitando a visualização de inventário e saúde global.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Teaser Info Banner -->
+        <div class="glass-card rounded-3xl p-8 md:p-12 text-center relative overflow-hidden flex flex-col items-center justify-center gap-6 border border-neutral-200">
+          <div class="absolute inset-0 bg-gradient-to-r from-emerald-500/10 via-transparent to-indigo-500/10 pointer-events-none"></div>
+          <h3 class="serif-title text-2xl md:text-3xl font-bold text-neutral-900 max-w-xl">
+            Pronto para transformar a produtividade do seu rebanho?
+          </h3>
+          <p class="text-neutral-600 text-sm max-w-lg">
+            Junte-se a centenas de produtores rurais que gerenciam seus gados com relatórios dinâmicos e organização de alto nível.
+          </p>
+          <button onclick="navigateTo('login')" class="px-8 py-3.5 bg-neutral-900 text-white font-semibold rounded-xl hover:bg-neutral-800 transition-all duration-200 active:scale-95 shadow-lg shadow-neutral-200 cursor-pointer">
+            Entrar Agora mesmo
+          </button>
+        </div>
+
+      </section>
+
+      <!-- ============================================= -->
+      <!-- 2. LOGIN PAGE VIEW -->
+      <!-- ============================================= -->
+      <section id="view-login" class="hidden max-w-lg mx-auto px-6 w-full py-8 flex flex-col gap-8">
+        
+        <div class="text-center flex flex-col gap-2">
+          <h2 class="serif-title text-3xl font-bold text-neutral-900">Acesse o sistema</h2>
+          <p class="text-neutral-600 text-sm">Insira suas credenciais de produtor para gerenciar suas vaquinhas.</p>
+        </div>
+
+        <!-- Login Glass Card -->
+        <div class="glass-card p-8 rounded-3xl flex flex-col gap-6 border border-neutral-200">
+          <form id="login-form" onsubmit="handleLogin(event)" class="flex flex-col gap-5">
+            <div class="flex flex-col gap-1.5">
+              <label for="login-email" class="text-xs text-neutral-500 font-semibold tracking-wider uppercase">E-mail</label>
+              <div class="relative">
+                <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center text-neutral-500">
+                  <i data-lucide="mail" class="w-5 h-5"></i>
+                </span>
+                <input type="email" id="login-email" required placeholder="ex: fazendeiro@vaquinhas.com" class="w-full bg-white border border-neutral-200 text-neutral-900 placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 rounded-xl pl-11 pr-4 py-3.5 transition-all text-sm" />
+              </div>
+            </div>
+
+            <div class="flex flex-col gap-1.5">
+              <label for="login-password" class="text-xs text-neutral-500 font-semibold tracking-wider uppercase">Senha</label>
+              <div class="relative">
+                <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center text-neutral-500">
+                  <i data-lucide="lock" class="w-5 h-5"></i>
+                </span>
+                <input type="password" id="login-password" required placeholder="••••••••" class="w-full bg-white border border-neutral-200 text-neutral-900 placeholder-neutral-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 rounded-xl pl-11 pr-4 py-3.5 transition-all text-sm" />
+              </div>
+            </div>
+
+            <div id="login-error" class="hidden text-xs text-rose-500 bg-rose-50 px-3 py-2 rounded-lg flex items-center gap-2 border border-rose-200">
+              <i data-lucide="alert-circle" class="w-4 h-4 shrink-0"></i>
+              <span id="login-error-text">E-mail ou senha incorretos.</span>
+            </div>
+
+            <button type="submit" class="w-full mt-2 py-3.5 bg-neutral-900 text-white font-semibold rounded-xl hover:bg-neutral-800 transition-all active:scale-[0.98] duration-200 shadow-md cursor-pointer">
+              Acessar Painel
+            </button>
+          </form>
+
+          <!-- Divider line -->
+          <div class="flex items-center gap-3 text-xs text-neutral-400 uppercase font-semibold">
+            <div class="h-[1px] bg-neutral-200 grow"></div>
+            <span>ou utilize</span>
+            <div class="h-[1px] bg-neutral-200 grow"></div>
+          </div>
+
+          <!-- Fast Access shortcuts -->
+          <div class="flex flex-col gap-3">
+            <p class="text-center text-xs text-neutral-500 font-medium">Acesso Rápido — Preencher Automaticamente</p>
+            <div class="grid grid-cols-2 gap-3">
+              <button onclick="fillLogin('fazendeiro@vaquinhas.com', '123456')" class="py-3 px-2 border border-neutral-200 bg-neutral-50 hover:bg-neutral-100 text-neutral-700 hover:text-neutral-900 rounded-xl text-xs font-semibold flex items-center justify-center gap-1.5 transition-all active:scale-[0.97] cursor-pointer">
+                <span>👨‍🌾</span> Fazendeiro
+              </button>
+              <button onclick="fillLogin('admin@vaquinhas.com', '123456')" class="py-3 px-2 border border-neutral-200 bg-neutral-50 hover:bg-neutral-100 text-neutral-700 hover:text-neutral-900 rounded-xl text-xs font-semibold flex items-center justify-center gap-1.5 transition-all active:scale-[0.97] cursor-pointer">
+                <span>🛡️</span> Admin
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <button onclick="navigateTo('landing')" class="mx-auto flex items-center gap-2 text-neutral-500 hover:text-neutral-900 text-sm font-semibold transition-colors cursor-pointer">
+          <i data-lucide="arrow-left" class="w-4 h-4"></i> Voltar ao Início
+        </button>
+
+      </section>
+
+      <!-- ============================================= -->
+      <!-- 3. FARMER DASHBOARD VIEW -->
+      <!-- ============================================= -->
+      <section id="view-farmer" class="hidden max-w-7xl mx-auto px-6 w-full flex flex-col gap-10 py-4">
+        
+        <!-- Welcome banner -->
+        <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-6 pb-6 border-b border-neutral-200">
+          <div class="flex items-center gap-4">
+            <div class="w-16 h-16 rounded-2xl bg-neutral-50 border border-neutral-200 flex items-center justify-center text-3xl shadow-inner">
+              👨‍🌾
+            </div>
+            <div>
+              <div class="flex items-center gap-2">
+                <h2 class="serif-title text-2xl md:text-3xl font-bold text-neutral-900">Olá, <span id="farmer-name">Fazendeiro</span>!</h2>
+                <span class="bg-emerald-100 text-emerald-800 border border-emerald-200 px-2 py-0.5 rounded-md text-[10px] font-bold tracking-wide uppercase">Produtor</span>
+              </div>
+              <p class="text-neutral-600 text-sm">Bem-vindo de volta ao seu painel de controle da <span class="text-neutral-900 font-semibold">Fazenda Sol Nascente</span>.</p>
+            </div>
+          </div>
+
+          <div class="flex items-center gap-3">
+            <button onclick="openCowModal()" class="px-5 py-3 bg-neutral-900 text-white font-semibold rounded-xl hover:bg-neutral-800 transition-all flex items-center gap-2 active:scale-95 text-sm shadow-md cursor-pointer">
+              <i data-lucide="plus" class="w-4 h-4"></i> Cadastrar Vaquinha
+            </button>
+            <button onclick="handleLogout()" class="px-4 py-3 border border-neutral-200 bg-neutral-50 hover:bg-neutral-100 text-neutral-700 hover:text-neutral-900 rounded-xl transition-all flex items-center gap-1.5 text-sm cursor-pointer" title="Sair da plataforma">
+              <i data-lucide="log-out" class="w-4 h-4"></i> <span class="hidden sm:inline">Sair</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Farmer KPI Metrics Cards -->
+        <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+          <!-- Total Cows -->
+          <div class="glass-card p-5 rounded-2xl flex flex-col gap-3 relative overflow-hidden border border-neutral-200">
+            <div class="flex justify-between items-center text-neutral-500">
+              <span class="text-xs uppercase font-bold tracking-wider">Total de Vaquinhas</span>
+              <span class="text-lg">🐄</span>
+            </div>
+            <div class="flex items-baseline gap-1">
+              <span id="metric-total-cows" class="text-3xl font-extrabold text-neutral-900 font-mono">0</span>
+              <span class="text-xs text-neutral-500 font-medium">cabeças</span>
+            </div>
+            <div class="text-[11px] text-emerald-600 flex items-center gap-1 font-medium">
+              <i data-lucide="arrow-up-right" class="w-3.5 h-3.5"></i> <span>100% integradas</span>
+            </div>
+          </div>
+
+          <!-- Lactating Cows -->
+          <div class="glass-card p-5 rounded-2xl flex flex-col gap-3 relative overflow-hidden border border-neutral-200">
+            <div class="flex justify-between items-center text-neutral-500">
+              <span class="text-xs uppercase font-bold tracking-wider">Em Lactação</span>
+              <span class="text-lg">💧</span>
+            </div>
+            <div class="flex items-baseline gap-1">
+              <span id="metric-lactating-cows" class="text-3xl font-extrabold text-sky-600 font-mono">0</span>
+              <span class="text-xs text-neutral-500 font-medium">vacas</span>
+            </div>
+            <div class="text-[11px] text-neutral-600 flex justify-between items-center font-medium">
+              <span>Produção active</span>
+              <span id="metric-lactating-percentage" class="text-sky-600 font-bold font-mono">0%</span>
+            </div>
+          </div>
+
+          <!-- Bulls -->
+          <div class="glass-card p-5 rounded-2xl flex flex-col gap-3 relative overflow-hidden border border-neutral-200">
+            <div class="flex justify-between items-center text-neutral-500">
+              <span class="text-xs uppercase font-bold tracking-wider">Touros</span>
+              <span class="text-lg">🛡️</span>
+            </div>
+            <div class="flex items-baseline gap-1">
+              <span id="metric-bulls" class="text-3xl font-extrabold text-indigo-600 font-mono">0</span>
+              <span class="text-xs text-neutral-500 font-medium">reprodutores</span>
+            </div>
+            <div class="text-[11px] text-neutral-600 font-medium" title="Definido por peso >= 650kg e idade >= 5 anos">
+              <span>Bovinos de elite</span>
+            </div>
+          </div>
+
+          <!-- Calves -->
+          <div class="glass-card p-5 rounded-2xl flex flex-col gap-3 relative overflow-hidden border border-neutral-200">
+            <div class="flex justify-between items-center text-neutral-500">
+              <span class="text-xs uppercase font-bold tracking-wider">Bezerros</span>
+              <span class="text-lg">✨</span>
+            </div>
+            <div class="flex items-baseline gap-1">
+              <span id="metric-calves" class="text-3xl font-extrabold text-purple-600 font-mono">0</span>
+              <span class="text-xs text-neutral-500 font-medium font-mono">criados</span>
+            </div>
+            <div class="text-[11px] text-neutral-600 font-medium" title="Definido por idade <= 1 ano">
+              <span>Próxima geração</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Filter bar & Cow Table Section -->
+        <div class="glass-card rounded-2xl overflow-hidden flex flex-col border border-neutral-200">
+          
+          <!-- Filter / Search Header -->
+          <div class="p-6 border-b border-neutral-200 flex flex-col sm:flex-row items-center gap-4 justify-between bg-neutral-50">
+            <div class="w-full sm:w-auto grow max-w-md relative">
+              <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-neutral-500">
+                <i data-lucide="search" class="w-4 h-4"></i>
+              </span>
+              <input type="text" id="cow-search" oninput="handleCowFilter()" placeholder="Buscar bovino por nome ou raça..." class="w-full bg-white border border-neutral-200 text-neutral-900 placeholder-neutral-450 focus:outline-none focus:ring-1 focus:ring-emerald-500/25 focus:border-emerald-500 rounded-xl pl-9 pr-4 py-2.5 text-sm transition-all" />
+            </div>
+
+            <div class="w-full sm:w-auto flex items-center gap-3">
+              <select id="cow-status-filter" onchange="handleCowFilter()" class="w-full sm:w-48 bg-white border border-neutral-200 text-neutral-800 focus:outline-none focus:ring-1 focus:ring-emerald-500/25 rounded-xl px-3 py-2.5 text-sm transition-all">
+                <option value="Todos">Todos os Status</option>
+                <option value="Saudável">Saudável</option>
+                <option value="Em Tratamento">Em Tratamento</option>
+                <option value="Gestante">Gestante</option>
+                <option value="Lactando">Lactando</option>
+              </select>
+
+              <button onclick="clearCowFilters()" class="p-2.5 border border-neutral-200 bg-neutral-50 hover:bg-neutral-100 rounded-xl text-neutral-500 hover:text-neutral-900 transition-colors cursor-pointer" title="Limpar Filtros">
+                <i data-lucide="filter-x" class="w-4 h-4"></i>
+              </button>
+            </div>
+          </div>
+
+          <!-- Table Wrapper -->
+          <div class="overflow-x-auto">
+            <table class="w-full text-left border-collapse">
+              <thead>
+                <tr class="border-b border-neutral-200 bg-neutral-50 text-xs font-semibold uppercase tracking-wider text-neutral-600">
+                  <th class="py-2.5 px-4">Identificação / Nome</th>
+                  <th class="py-2.5 px-4">Raça</th>
+                  <th class="py-2.5 px-4">Idade</th>
+                  <th class="py-2.5 px-4">Peso (kg)</th>
+                  <th class="py-2.5 px-4">Status de Saúde</th>
+                  <th class="py-2.5 px-4 text-right">Ações</th>
+                </tr>
+              </thead>
+              <tbody id="cows-table-body" class="divide-y divide-neutral-200 text-sm text-neutral-800">
+                <!-- Rows injected dynamically -->
+              </tbody>
+            </table>
+          </div>
+
+          <!-- Empty State Container -->
+          <div id="cows-empty-state" class="hidden flex flex-col items-center justify-center py-16 px-6 text-center gap-4">
+            <div class="w-16 h-16 rounded-full bg-neutral-100 flex items-center justify-center text-3xl">🌾</div>
+            <div class="flex flex-col gap-1 max-w-sm">
+              <h4 class="font-bold text-neutral-800">Nenhum bovino encontrado</h4>
+              <p class="text-neutral-500 text-xs">Ajuste seus filtros de busca ou cadastre uma nova vaquinha para iniciar seu controle.</p>
+            </div>
+            <button onclick="openCowModal()" class="px-4 py-2 border border-neutral-200 bg-neutral-50 hover:bg-neutral-100 text-neutral-700 rounded-lg text-xs font-semibold transition-all cursor-pointer">
+              Cadastrar Primeiro Bovino
+            </button>
+          </div>
+        </div>
+
+      </section>
+
+      <!-- ============================================= -->
+      <!-- 4. ADMIN PANEL VIEW -->
+      <!-- ============================================= -->
+      <section id="view-admin" class="hidden max-w-7xl mx-auto px-6 w-full flex flex-col gap-10 py-4">
+        
+        <!-- Header Panel Admin -->
+        <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-6 pb-6 border-b border-neutral-200">
+          <div class="flex items-center gap-4">
+            <div class="w-16 h-16 rounded-2xl bg-neutral-50 border border-neutral-200 flex items-center justify-center text-3xl shadow-inner">
+              ⚙️
+            </div>
+            <div>
+              <div class="flex items-center gap-2">
+                <h2 class="serif-title text-2xl md:text-3xl font-bold text-neutral-900">Painel Administrativo</h2>
+                <span class="bg-indigo-100 text-indigo-800 border border-indigo-200 px-2 py-0.5 rounded-md text-[10px] font-bold tracking-wide uppercase">Sistema</span>
+              </div>
+              <p class="text-neutral-600 text-sm">Gerenciamento global de produtores, fazendas e contingente total bovino.</p>
+            </div>
+          </div>
+
+          <div class="flex items-center gap-3">
+            <button onclick="openFarmerModal()" class="px-5 py-3 bg-neutral-900 text-white font-semibold rounded-xl hover:bg-neutral-800 transition-all flex items-center gap-2 active:scale-95 text-sm shadow-md cursor-pointer">
+              <i data-lucide="plus" class="w-4 h-4"></i> Cadastrar Produtor
+            </button>
+            <button onclick="handleLogout()" class="px-4 py-3 border border-neutral-200 bg-neutral-50 hover:bg-neutral-100 text-neutral-700 hover:text-neutral-900 rounded-xl transition-all flex items-center gap-1.5 text-sm cursor-pointer" title="Sair do painel administrativo">
+              <i data-lucide="log-out" class="w-4 h-4"></i> <span class="hidden sm:inline">Sair</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Global Admin Metrics -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <!-- Total Farmers -->
+          <div class="glass-card p-6 rounded-2xl flex flex-col gap-3 relative overflow-hidden border border-neutral-200">
+            <div class="flex justify-between items-center text-neutral-500">
+              <span class="text-xs uppercase font-bold tracking-wider">Produtores / Fazendeiros</span>
+              <span class="text-lg">👨‍🌾</span>
+            </div>
+            <div class="flex items-baseline gap-1">
+              <span id="metric-admin-farmers" class="text-4xl font-extrabold text-neutral-900 font-mono">0</span>
+              <span class="text-xs text-neutral-500 font-medium">cadastrados</span>
+            </div>
+            <p class="text-[11px] text-indigo-600 font-medium">Contas autorizadas no agrossistema</p>
+          </div>
+
+          <!-- Total Global Cows -->
+          <div class="glass-card p-6 rounded-2xl flex flex-col gap-3 relative overflow-hidden border border-neutral-200">
+            <div class="flex justify-between items-center text-neutral-500">
+              <span class="text-xs uppercase font-bold tracking-wider">Vaquinhas Totais</span>
+              <span class="text-lg">🐄</span>
+            </div>
+            <div class="flex items-baseline gap-1">
+              <span id="metric-admin-cows" class="text-4xl font-extrabold text-neutral-900 font-mono">0</span>
+              <span class="text-xs text-neutral-500 font-medium">bovinos</span>
+            </div>
+            <p class="text-[11px] text-neutral-500 font-medium">Soma de rebanhos de todas as fazendas</p>
+          </div>
+
+          <!-- Active Farms -->
+          <div class="glass-card p-6 rounded-2xl flex flex-col gap-3 relative overflow-hidden border border-neutral-200">
+            <div class="flex justify-between items-center text-neutral-500">
+              <span class="text-xs uppercase font-bold tracking-wider">Fazendas Ativas</span>
+              <span class="text-lg">🌾</span>
+            </div>
+            <div class="flex items-baseline gap-1">
+              <span id="metric-admin-farms" class="text-4xl font-extrabold text-emerald-600 font-mono">0</span>
+              <span class="text-xs text-neutral-500 font-medium">propriedades</span>
+            </div>
+            <div class="text-[11px] text-emerald-600 flex items-center gap-1 font-semibold">
+              <i data-lucide="check" class="w-3.5 h-3.5"></i> <span id="metric-admin-active-percentage">100% ativas</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Farmers/Users Management Section -->
+        <div class="glass-card rounded-2xl overflow-hidden flex flex-col border border-neutral-200">
+          
+          <!-- Admin Table Header with search -->
+          <div class="p-6 border-b border-neutral-200 flex flex-col sm:flex-row items-center gap-4 justify-between bg-neutral-50">
+            <h3 class="serif-title text-xl font-bold text-neutral-900 self-start sm:self-center">Produtores e Propriedades</h3>
+            
+            <div class="w-full sm:w-72 relative">
+              <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-neutral-500">
+                <i data-lucide="search" class="w-4 h-4"></i>
+              </span>
+              <input type="text" id="farmer-search" oninput="handleFarmerFilter()" placeholder="Buscar por produtor ou fazenda..." class="w-full bg-white border border-neutral-200 text-neutral-900 placeholder-neutral-450 focus:outline-none focus:ring-1 focus:ring-indigo-500/25 rounded-xl pl-9 pr-4 py-2 text-sm transition-all" />
+            </div>
+          </div>
+
+          <!-- Farmers Table Wrapper -->
+          <div class="overflow-x-auto">
+            <table class="w-full text-left border-collapse">
+              <thead>
+                <tr class="border-b border-neutral-200 bg-neutral-50 text-xs font-semibold uppercase tracking-wider text-neutral-600">
+                  <th class="py-2.5 px-4">Nome / E-mail</th>
+                  <th class="py-2.5 px-4">Propriedade / Fazenda</th>
+                  <th class="py-2.5 px-4">Gado Registrado</th>
+                  <th class="py-2.5 px-4">Status da Fazenda</th>
+                  <th class="py-2.5 px-4 text-right">Ações</th>
+                </tr>
+              </thead>
+              <tbody id="farmers-table-body" class="divide-y divide-neutral-200 text-sm text-neutral-850">
+                <!-- Injected dynamically -->
+              </tbody>
+            </table>
+          </div>
+
+          <!-- Empty State Admin -->
+          <div id="farmers-empty-state" class="hidden flex flex-col items-center justify-center py-16 px-6 text-center gap-4">
+            <div class="w-16 h-16 rounded-full bg-neutral-100 flex items-center justify-center text-3xl">🌾</div>
+            <div class="flex flex-col gap-1 max-w-sm">
+              <h4 class="font-bold text-neutral-800">Nenhum produtor encontrado</h4>
+              <p class="text-neutral-500 text-xs">Crie um novo produtor de exemplo para alimentar os relatórios.</p>
+            </div>
+            <button onclick="openFarmerModal()" class="px-4 py-2 border border-neutral-200 bg-neutral-50 hover:bg-neutral-100 text-neutral-700 rounded-lg text-xs font-semibold transition-all cursor-pointer">
+              Cadastrar Produtor
+            </button>
+          </div>
+        </div>
+
+      </section>
+
+    </main>
+
+    <!-- ============================================= -->
+    <!-- FOOTER -->
+    <!-- ============================================= -->
+    <footer class="relative z-10 border-t border-neutral-200 bg-neutral-50 py-8 px-6 text-center text-xs text-neutral-600 flex flex-col gap-3">
+      <div class="max-w-7xl mx-auto w-full flex flex-col sm:flex-row items-center justify-between gap-4">
+        <p>© 2026 Vaquinhas Felizes S.A. Todos os direitos reservados.</p>
+        <div class="flex gap-6 text-neutral-500">
+          <a href="#" onclick="event.preventDefault(); showToast('Diretrizes de Privacidade', 'info');" class="hover:text-neutral-900 transition-colors">Política de Privacidade</a>
+          <a href="#" onclick="event.preventDefault(); showToast('Termos de Serviço', 'info');" class="hover:text-neutral-900 transition-colors">Termos de Uso</a>
+          <a href="#" onclick="event.preventDefault(); showToast('Suporte do Campo: 0800-MILK-COW', 'info');" class="hover:text-neutral-900 transition-colors">Suporte</a>
+        </div>
+      </div>
+    </footer>
+
+    <!-- ============================================= -->
+    <!-- MODALS SECTION -->
+    <!-- ============================================= -->
+    
+    <!-- 1. COW MODAL (ADD / EDIT) -->
+    <div id="cow-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center px-4">
+      <!-- Backdrop -->
+      <div class="absolute inset-0 bg-neutral-900/60 backdrop-blur-sm" onclick="closeCowModal()"></div>
+      
+      <!-- Modal Box -->
+      <div class="glass-card w-full max-w-lg rounded-3xl overflow-hidden relative z-10 animate-fadeIn border border-neutral-200" style="box-shadow: 0 24px 64px -12px rgba(0,0,0,0.15);">
+        
+        <!-- Modal Header -->
+        <div class="px-6 py-5 border-b border-neutral-100 bg-neutral-50 flex items-center justify-between">
+          <div class="flex items-center gap-2">
+            <span class="text-xl">🐄</span>
+            <h3 id="cow-modal-title" class="serif-title text-xl font-bold text-neutral-900">Cadastrar Vaquinha</h3>
+          </div>
+          <button onclick="closeCowModal()" class="p-1.5 rounded-lg hover:bg-neutral-100 text-neutral-500 hover:text-neutral-900 transition-all cursor-pointer">
+            <i data-lucide="x" class="w-5 h-5"></i>
+          </button>
+        </div>
+        
+        <!-- Modal Form -->
+        <form id="cow-form" onsubmit="saveCow(event)" class="p-6 flex flex-col gap-5">
+          <input type="hidden" id="cow-id" />
+          
+          <div class="grid grid-cols-2 gap-4">
+            <div class="flex flex-col gap-1.5 col-span-2">
+              <label for="cow-name" class="text-xs text-neutral-500 font-semibold uppercase tracking-wider">Nome do Bovino</label>
+              <input type="text" id="cow-name" required placeholder="Ex: Mimosa" class="w-full bg-white border border-neutral-200 text-neutral-900 placeholder-neutral-400 focus:outline-none focus:ring-1 focus:ring-emerald-500/20 rounded-xl px-4 py-3 text-sm transition-all" />
+            </div>
+
+            <div class="flex flex-col gap-1.5">
+              <label for="cow-breed" class="text-xs text-neutral-500 font-semibold uppercase tracking-wider">Raça</label>
+              <input type="text" id="cow-breed" required placeholder="Ex: Nelore, Holandesa, Gir..." class="w-full bg-white border border-neutral-200 text-neutral-900 placeholder-neutral-400 focus:outline-none focus:ring-1 focus:ring-emerald-500/20 rounded-xl px-4 py-3 text-sm transition-all" />
+            </div>
+
+            <div class="flex flex-col gap-1.5">
+              <label for="cow-status" class="text-xs text-neutral-500 font-semibold uppercase tracking-wider">Status</label>
+              <select id="cow-status" required class="w-full bg-white border border-neutral-200 text-neutral-800 focus:outline-none focus:ring-1 focus:ring-emerald-500/20 rounded-xl px-3 py-3 text-sm transition-all">
+                <option value="Saudável">Saudável</option>
+                <option value="Em Tratamento">Em Tratamento</option>
+                <option value="Gestante">Gestante</option>
+                <option value="Lactando">Lactando</option>
+              </select>
+            </div>
+
+            <div class="flex flex-col gap-1.5">
+              <label for="cow-age" class="text-xs text-neutral-500 font-semibold uppercase tracking-wider">Idade (anos)</label>
+              <input type="number" id="cow-age" required min="0" step="0.5" placeholder="Ex: 3" class="w-full bg-white border border-neutral-200 text-neutral-900 placeholder-neutral-400 focus:outline-none focus:ring-1 focus:ring-emerald-500/20 rounded-xl px-4 py-3 text-sm transition-all" />
+            </div>
+
+            <div class="flex flex-col gap-1.5">
+              <label for="cow-weight" class="text-xs text-neutral-500 font-semibold uppercase tracking-wider">Peso (kg)</label>
+              <input type="number" id="cow-weight" required min="1" placeholder="Ex: 450" class="w-full bg-white border border-neutral-200 text-neutral-900 placeholder-neutral-400 focus:outline-none focus:ring-1 focus:ring-emerald-500/20 rounded-xl px-4 py-3 text-sm transition-all" />
+            </div>
+          </div>
+          
+          <div class="flex items-center justify-end gap-3 pt-3 border-t border-neutral-100">
+            <button type="button" onclick="closeCowModal()" class="px-5 py-2.5 border border-neutral-200 text-neutral-500 hover:text-neutral-800 rounded-xl text-sm font-medium hover:bg-neutral-50 transition-all cursor-pointer">
+              Cancelar
+            </button>
+            <button type="submit" class="px-6 py-2.5 bg-neutral-900 text-white font-semibold rounded-xl hover:bg-neutral-800 transition-all text-sm shadow-md active:scale-95 duration-200 cursor-pointer">
+              Salvar Alterações
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- 2. FARMER MODAL (ADD / EDIT) -->
+    <div id="farmer-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center px-4">
+      <!-- Backdrop -->
+      <div class="absolute inset-0 bg-neutral-900/60 backdrop-blur-sm" onclick="closeFarmerModal()"></div>
+      
+      <!-- Modal Box -->
+      <div class="glass-card w-full max-w-lg rounded-3xl overflow-hidden relative z-10 animate-fadeIn border border-neutral-200" style="box-shadow: 0 24px 64px -12px rgba(0,0,0,0.15);">
+        
+        <!-- Modal Header -->
+        <div class="px-6 py-5 border-b border-neutral-100 bg-neutral-50 flex items-center justify-between">
+          <div class="flex items-center gap-2">
+            <span class="text-xl">🌾</span>
+            <h3 id="farmer-modal-title" class="serif-title text-xl font-bold text-neutral-900">Cadastrar Produtor</h3>
+          </div>
+          <button onclick="closeFarmerModal()" class="p-1.5 rounded-lg hover:bg-neutral-100 text-neutral-500 hover:text-neutral-900 transition-all cursor-pointer">
+            <i data-lucide="x" class="w-5 h-5"></i>
+          </button>
+        </div>
+        
+        <!-- Modal Form -->
+        <form id="farmer-form" onsubmit="saveFarmer(event)" class="p-6 flex flex-col gap-5">
+          <input type="hidden" id="farmer-id" />
+          
+          <div class="flex flex-col gap-1.5">
+            <label for="farmer-name-field" class="text-xs text-neutral-500 font-semibold uppercase tracking-wider">Nome Completo</label>
+            <input type="text" id="farmer-name-field" required placeholder="Ex: Maria José" class="w-full bg-white border border-neutral-200 text-neutral-900 placeholder-neutral-400 focus:outline-none focus:ring-1 focus:ring-indigo-500/20 rounded-xl px-4 py-3 text-sm transition-all" />
+          </div>
+
+          <div class="flex flex-col gap-1.5">
+            <label for="farmer-email-field" class="text-xs text-neutral-500 font-semibold uppercase tracking-wider">E-mail</label>
+            <input type="email" id="farmer-email-field" required placeholder="Ex: maria@fazenda.com" class="w-full bg-white border border-neutral-200 text-neutral-900 placeholder-neutral-400 focus:outline-none focus:ring-1 focus:ring-indigo-500/20 rounded-xl px-4 py-3 text-sm transition-all" />
+          </div>
+
+          <div class="grid grid-cols-2 gap-4">
+            <div class="flex flex-col gap-1.5">
+              <label for="farmer-property-field" class="text-xs text-neutral-500 font-semibold uppercase tracking-wider">Nome da Fazenda</label>
+              <input type="text" id="farmer-property-field" required placeholder="Ex: Estância Verdejar" class="w-full bg-white border border-neutral-200 text-neutral-900 placeholder-neutral-400 focus:outline-none focus:ring-1 focus:ring-indigo-500/20 rounded-xl px-4 py-3 text-sm transition-all" />
+            </div>
+
+            <div class="flex flex-col gap-1.5">
+              <label for="farmer-status-field" class="text-xs text-neutral-500 font-semibold uppercase tracking-wider">Status Inicial</label>
+              <select id="farmer-status-field" required class="w-full bg-white border border-neutral-200 text-neutral-800 focus:outline-none focus:ring-1 focus:ring-indigo-500/20 rounded-xl px-3 py-3 text-sm transition-all">
+                <option value="Ativo">Ativo</option>
+                <option value="Inativo">Inativo</option>
+              </select>
+            </div>
+          </div>
+          
+          <div class="flex items-center justify-end gap-3 pt-3 border-t border-neutral-100">
+            <button type="button" onclick="closeFarmerModal()" class="px-5 py-2.5 border border-neutral-200 text-neutral-500 hover:text-neutral-800 rounded-xl text-sm font-medium hover:bg-neutral-50 transition-all cursor-pointer">
+              Cancelar
+            </button>
+            <button type="submit" class="px-6 py-2.5 bg-neutral-900 text-white font-semibold rounded-xl hover:bg-neutral-800 transition-all text-sm shadow-md active:scale-95 duration-200 cursor-pointer">
+              Salvar Produtor
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+
+    <!-- ============================================= -->
+    <!-- CORE JAVASCRIPT SYSTEM -->
+    <!-- ============================================= -->
+    <script>
+      // Global User database for simulation
+      const users = [
+        { email: "fazendeiro@vaquinhas.com", senha: "123456", tipo: "fazendeiro", nome: "João da Silva" },
+        { email: "admin@vaquinhas.com", senha: "123456", tipo: "admin", nome: "Administrador" }
+      ];
+
+      // Initial Data Fallbacks
+      const initialCows = [
+        { id: "1", nome: "Mimosa", raca: "Holandesa", idade: 3.5, peso: 480, status: "Lactando" },
+        { id: "2", nome: "Estrela", raca: "Nelore", idade: 4, peso: 520, status: "Saudável" },
+        { id: "3", nome: "Pintada", raca: "Gir", idade: 5, peso: 510, status: "Gestante" },
+        { id: "4", nome: "Bruma", raca: "Guzerá", idade: 2, peso: 420, status: "Em Tratamento" },
+        { id: "5", nome: "Barão (Touro)", raca: "Nelore", idade: 6, peso: 780, status: "Saudável" },
+        { id: "6", nome: "Floquinho", raca: "Holandesa", idade: 0.8, peso: 120, status: "Saudável" }
+      ];
+
+      const initialFarmers = [
+        { id: "1", nome: "João da Silva", email: "fazendeiro@vaquinhas.com", fazenda: "Fazenda Sol Nascente", vaquinhasCount: 6, status: "Ativo" },
+        { id: "2", nome: "Maria Souza", email: "maria@fazenda.com", fazenda: "Estância Verdejar", vaquinhasCount: 14, status: "Ativo" },
+        { id: "3", nome: "Antônio Pires", email: "antonio@agro.com", fazenda: "Sítio Bela Vista", vaquinhasCount: 8, status: "Inativo" },
+        { id: "4", nome: "Fernanda Costa", email: "fernanda@rebanho.com", fazenda: "Fazenda Recanto Doce", vaquinhasCount: 11, status: "Ativo" }
+      ];
+
+      // Application State Initialization
+      let currentUser = JSON.parse(sessionStorage.getItem("vaquinhas_felizes_user")) || null;
+      let cows = JSON.parse(localStorage.getItem("vaquinhas_felizes_cows")) || initialCows;
+      let farmers = JSON.parse(localStorage.getItem("vaquinhas_felizes_farmers")) || initialFarmers;
+      
+      // Filter values
+      let cowSearchQuery = "";
+      let cowStatusFilter = "Todos";
+      let farmerSearchQuery = "";
+
+      // Document elements shortcut
+      const dom = {
+        toastContainer: document.getElementById("toast-container"),
+        navDesktopMenu: document.getElementById("nav-desktop-menu"),
+        navMobileDrawer: document.getElementById("nav-mobile-drawer"),
+        mobileMenuBtn: document.getElementById("mobile-menu-btn"),
+        
+        // Views
+        landing: document.getElementById("view-landing"),
+        login: document.getElementById("view-login"),
+        farmer: document.getElementById("view-farmer"),
+        admin: document.getElementById("view-admin"),
+        
+        // Forms
+        loginForm: document.getElementById("login-form"),
+        loginEmail: document.getElementById("login-email"),
+        loginPassword: document.getElementById("login-password"),
+        loginError: document.getElementById("login-error"),
+        loginErrorText: document.getElementById("login-error-text"),
+        
+        // Modals
+        cowModal: document.getElementById("cow-modal"),
+        cowForm: document.getElementById("cow-form"),
+        cowModalTitle: document.getElementById("cow-modal-title"),
+        
+        farmerModal: document.getElementById("farmer-modal"),
+        farmerForm: document.getElementById("farmer-form"),
+        farmerModalTitle: document.getElementById("farmer-modal-title"),
+
+        // Tables & Data
+        cowsTableBody: document.getElementById("cows-table-body"),
+        cowsEmptyState: document.getElementById("cows-empty-state"),
+        farmersTableBody: document.getElementById("farmers-table-body"),
+        farmersEmptyState: document.getElementById("farmers-empty-state"),
+        
+        // Dynamic labels
+        farmerNameLabel: document.getElementById("farmer-name")
+      };
+
+      // Toast Notifications System
+      function showToast(message, type = 'success') {
+        const toast = document.createElement("div");
+        toast.className = `glass-card px-5 py-4 rounded-2xl shadow-xl border border-neutral-200 bg-white flex items-center gap-3 animate-fadeIn pointer-events-auto transition-all duration-300 transform translate-x-12 opacity-0 max-w-sm w-full`;
+        
+        let iconHtml = "";
+        if (type === 'success') {
+          iconHtml = `<div class="w-8 h-8 rounded-full bg-emerald-50 text-emerald-600 border border-emerald-100 flex items-center justify-center shrink-0"><i data-lucide="check" class="w-4 h-4"></i></div>`;
+        } else if (type === 'error') {
+          iconHtml = `<div class="w-8 h-8 rounded-full bg-rose-50 text-rose-600 border border-rose-100 flex items-center justify-center shrink-0"><i data-lucide="x" class="w-4 h-4"></i></div>`;
+        } else {
+          iconHtml = `<div class="w-8 h-8 rounded-full bg-blue-50 text-blue-600 border border-blue-100 flex items-center justify-center shrink-0"><i data-lucide="info" class="w-4 h-4"></i></div>`;
+        }
+        
+        toast.innerHTML = `
+          ${iconHtml}
+          <div class="flex-1 text-sm text-neutral-800 font-semibold">${message}</div>
+          <button onclick="this.parentElement.remove()" class="text-neutral-400 hover:text-neutral-800 transition-all cursor-pointer"><i data-lucide="x" class="w-4 h-4"></i></button>
+        `;
+        
+        dom.toastContainer.appendChild(toast);
+        lucide.createIcons();
+        
+        // Trigger entrance transition
+        setTimeout(() => {
+          toast.classList.remove("translate-x-12", "opacity-0");
+        }, 10);
+        
+        // Auto remove
+        setTimeout(() => {
+          toast.classList.add("translate-x-12", "opacity-0");
+          setTimeout(() => toast.remove(), 300);
+        }, 4000);
+      }
+
+      // Smooth scrolling helper for Landing Page
+      function scrollToSection(id) {
+        const el = document.getElementById(id);
+        if (el) {
+          el.scrollIntoView({ behavior: 'smooth' });
+        }
+      }
+
+      // Fill Login inputs automatically
+      function fillLogin(email, password) {
+        dom.loginEmail.value = email;
+        dom.loginPassword.value = password;
+        dom.loginError.classList.add("hidden");
+        showToast("Credenciais inseridas automaticamente!", "info");
+      }
+
+      // Navigation & Routing Engine (SPA style)
+      function navigateTo(viewName) {
+        // Toggle desktop and mobile view classes
+        const views = ['landing', 'login', 'farmer', 'admin'];
+        views.forEach(v => {
+          if (v === viewName) {
+            dom[v].classList.remove("hidden");
+            dom[v].classList.add("view-active");
+          } else {
+            dom[v].classList.add("hidden");
+            dom[v].classList.remove("view-active");
+          }
+        });
+
+        // Close mobile drawer on navigation
+        dom.navMobileDrawer.classList.add("hidden");
+        
+        // Update browser title
+        const formattedTitle = viewName === 'landing' ? 'Vaquinhas Felizes — Gestão de Rebanho' : `Vaquinhas Felizes — ${viewName.toUpperCase()}`;
+        document.title = formattedTitle;
+
+        // Populate menus contextually
+        renderMenus(viewName);
+
+        // View specific initializations
+        if (viewName === 'farmer') {
+          if (!currentUser || currentUser.tipo !== 'fazendeiro') {
+            showToast("Acesso negado. Por favor, faça login como fazendeiro.", "error");
+            navigateTo('login');
+            return;
+          }
+          dom.farmerNameLabel.textContent = currentUser.nome;
+          renderCowsTable();
+          updateFarmerMetrics();
+        } else if (viewName === 'admin') {
+          if (!currentUser || currentUser.tipo !== 'admin') {
+            showToast("Acesso restrito. Por favor, faça login como administrador.", "error");
+            navigateTo('login');
+            return;
+          }
+          renderFarmersTable();
+          updateAdminMetrics();
+        }
+
+        // Initialize lucide icons for newly mounted HTML elements
+        lucide.createIcons();
+        window.scrollTo({ top: 0, behavior: 'instant' });
+      }
+
+      // Dynamic Menu Builder based on current user context
+      function renderMenus(currentView) {
+        let items = '';
+        
+        if (!currentUser) {
+          // Public User
+          items = `
+            <a href="#" onclick="event.preventDefault(); navigateTo('landing');" class="text-sm font-medium ${currentView === 'landing' ? 'text-white font-semibold' : 'text-neutral-400 hover:text-white'} transition-colors">Início</a>
+            <a href="#" onclick="event.preventDefault(); scrollToSection('benefits');" class="text-sm font-medium text-neutral-400 hover:text-white transition-colors">Benefícios</a>
+            <div class="h-4 w-[1px] bg-white/10 hidden md:block"></div>
+            <button onclick="navigateTo('login')" class="px-4 py-2 border border-white/10 text-white rounded-xl hover:bg-white/5 text-sm font-semibold transition-all active:scale-95 flex items-center gap-1.5">
+              <i data-lucide="log-in" class="w-4 h-4"></i> Login
+            </button>
+            <button onclick="directAdminAccess()" class="px-4 py-2 bg-white/5 border border-white/5 hover:bg-white/10 text-neutral-300 hover:text-white rounded-xl text-sm font-semibold transition-all flex items-center gap-1.5" title="Painel administrativo discreto">
+              <i data-lucide="shield" class="w-4 h-4"></i> Admin
+            </button>
+          `;
+        } else if (currentUser.tipo === 'fazendeiro') {
+          // Logged in Farmer
+          items = `
+            <span class="text-xs font-semibold px-2.5 py-1 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/10">Fazenda Sol Nascente</span>
+            <span class="text-sm font-medium text-neutral-300">Olá, <b>${currentUser.nome}</b></span>
+            <button onclick="navigateTo('farmer')" class="text-sm font-semibold ${currentView === 'farmer' ? 'text-white' : 'text-neutral-400 hover:text-white'} transition-colors">Painel</button>
+            <button onclick="handleLogout()" class="px-4 py-2 border border-white/10 hover:bg-white/5 text-white rounded-xl text-sm font-semibold transition-all flex items-center gap-1.5">
+              <i data-lucide="log-out" class="w-4 h-4"></i> Sair
+            </button>
+          `;
+        } else if (currentUser.tipo === 'admin') {
+          // Logged in Administrator
+          items = `
+            <span class="text-xs font-semibold px-2.5 py-1 rounded-full bg-indigo-500/10 text-indigo-400 border border-indigo-500/10">⚙️ Administração Geral</span>
+            <button onclick="navigateTo('admin')" class="text-sm font-semibold ${currentView === 'admin' ? 'text-white' : 'text-neutral-400 hover:text-white'} transition-colors">Painel Admin</button>
+            <button onclick="handleLogout()" class="px-4 py-2 border border-white/10 hover:bg-white/5 text-white rounded-xl text-sm font-semibold transition-all flex items-center gap-1.5">
+              <i data-lucide="log-out" class="w-4 h-4"></i> Sair
+            </button>
+          `;
+        }
+
+        dom.navDesktopMenu.innerHTML = items;
+        dom.navMobileDrawer.innerHTML = items;
+        lucide.createIcons();
+      }
+
+      // Admin direct discreet bypass
+      function directAdminAccess() {
+        // Set simulated admin user directly
+        currentUser = { email: "admin@vaquinhas.com", senha: "123456", tipo: "admin", nome: "Administrador" };
+        sessionStorage.setItem("vaquinhas_felizes_user", JSON.stringify(currentUser));
+        showToast("Acesso administrativo ativado diretamente!", "info");
+        navigateTo('admin');
+      }
+
+      // Login handler
+      function handleLogin(e) {
+        e.preventDefault();
+        const email = dom.loginEmail.value.trim().toLowerCase();
+        const password = dom.loginPassword.value;
+
+        // Basic credentials check
+        const matchedUser = users.find(u => u.email === email && u.senha === password);
+
+        if (matchedUser) {
+          currentUser = matchedUser;
+          sessionStorage.setItem("vaquinhas_felizes_user", JSON.stringify(currentUser));
+          dom.loginError.classList.add("hidden");
+          dom.loginForm.reset();
+          
+          showToast(`Bem-vindo, ${currentUser.nome}!`, 'success');
+          
+          if (currentUser.tipo === 'admin') {
+            navigateTo('admin');
+          } else {
+            navigateTo('farmer');
+          }
+        } else {
+          // Dynamic handling if they want to enter as custom farmer (emails not containing admin)
+          if (email && password === '123456') {
+            const isEmailAdmin = email.includes("admin");
+            currentUser = {
+              email: email,
+              senha: password,
+              tipo: isEmailAdmin ? 'admin' : 'fazendeiro',
+              nome: isEmailAdmin ? 'Administrador Extra' : email.split('@')[0].toUpperCase()
+            };
+            sessionStorage.setItem("vaquinhas_felizes_user", JSON.stringify(currentUser));
+            dom.loginForm.reset();
+            showToast(`Acesso rápido: ${currentUser.nome}!`, 'success');
+            navigateTo(currentUser.tipo);
+          } else {
+            dom.loginErrorText.textContent = "E-mail ou senha incorretos. Utilize o Acesso Rápido para testar.";
+            dom.loginError.classList.remove("hidden");
+            showToast("Falha na autenticação.", 'error');
+          }
+        }
+      }
+
+      // Logout handler
+      function handleLogout() {
+        currentUser = null;
+        sessionStorage.removeItem("vaquinhas_felizes_user");
+        showToast("Sessão finalizada com sucesso.", 'info');
+        navigateTo('landing');
+      }
+
+      // Toggle Mobile Menu drawer
+      dom.mobileMenuBtn.addEventListener("click", () => {
+        dom.navMobileDrawer.classList.toggle("hidden");
+        dom.navMobileDrawer.classList.toggle("flex");
+      });
+
+
+      /* ============================================= */
+      /* COWS INVENTORY CONTROLLERS (FARMER VIEW) */
+      /* ============================================= */
+
+      // Calculate state metrics dynamically
+      function updateFarmerMetrics() {
+        const total = cows.length;
+        const lactating = cows.filter(c => c.status === "Lactando").length;
+        
+        // Elite bulls: arbitrary filter matching heavier and older cattle
+        const bulls = cows.filter(c => c.peso >= 650 && c.idade >= 5).length;
+        
+        // Calves (Bezerros): younger calves <= 1 year
+        const calves = cows.filter(c => c.idade <= 1).length;
+
+        dom.farmerNameLabel.textContent = currentUser ? currentUser.nome : "Fazendeiro";
+        document.getElementById("metric-total-cows").textContent = total;
+        document.getElementById("metric-lactating-cows").textContent = lactating;
+        document.getElementById("metric-bulls").textContent = bulls;
+        document.getElementById("metric-calves").textContent = calves;
+
+        // Production Percentage
+        const percentage = total > 0 ? Math.round((lactating / total) * 100) : 0;
+        document.getElementById("metric-lactating-percentage").textContent = `${percentage}%`;
+        
+        // Update farmers array to match cows count dynamically if current user is João
+        if (currentUser && currentUser.email === "fazendeiro@vaquinhas.com") {
+          const joaoIndex = farmers.findIndex(f => f.email === "fazendeiro@vaquinhas.com");
+          if (joaoIndex !== -1) {
+            farmers[joaoIndex].vaquinhasCount = total;
+            localStorage.setItem("vaquinhas_felizes_farmers", JSON.stringify(farmers));
+          }
+        }
+      }
+
+      // Render cow row inside the tbody
+      function renderCowsTable() {
+        const filtered = cows.filter(c => {
+          const matchSearch = c.nome.toLowerCase().includes(cowSearchQuery.toLowerCase()) || 
+                              c.raca.toLowerCase().includes(cowSearchQuery.toLowerCase());
+          const matchStatus = cowStatusFilter === "Todos" || c.status === cowStatusFilter;
+          return matchSearch && matchStatus;
+        });
+
+        if (filtered.length === 0) {
+          dom.cowsTableBody.innerHTML = "";
+          dom.cowsEmptyState.classList.remove("hidden");
+        } else {
+          dom.cowsEmptyState.classList.add("hidden");
+          
+          let rowsHtml = "";
+          filtered.forEach(c => {
+            let statusClass = "";
+            let pulseColor = "";
+            
+            switch (c.status) {
+              case "Saudável":
+                statusClass = "bg-emerald-50 text-emerald-700 border border-emerald-200";
+                pulseColor = "bg-emerald-500";
+                break;
+              case "Em Tratamento":
+                statusClass = "bg-rose-50 text-rose-700 border border-rose-200";
+                pulseColor = "bg-rose-500";
+                break;
+              case "Gestante":
+                statusClass = "bg-purple-50 text-purple-700 border border-purple-200";
+                pulseColor = "bg-purple-500";
+                break;
+              case "Lactando":
+                statusClass = "bg-sky-50 text-sky-700 border border-sky-200";
+                pulseColor = "bg-sky-500";
+                break;
+              default:
+                statusClass = "bg-neutral-50 text-neutral-600 border border-neutral-200";
+                pulseColor = "bg-neutral-400";
+            }
+
+            // Highlighting bulls and calves visually next to names for extra flair
+            const isBull = c.peso >= 650 && c.idade >= 5;
+            const isCalf = c.idade <= 1;
+            let tagBadge = "";
+            if (isBull) tagBadge = `<span class="ml-2 text-[9px] font-bold px-1.5 py-0.5 bg-indigo-50 text-indigo-700 border border-indigo-200 rounded">Touro Elite</span>`;
+            else if (isCalf) tagBadge = `<span class="ml-2 text-[9px] font-bold px-1.5 py-0.5 bg-purple-50 text-purple-700 border border-purple-200 rounded">Bezerro</span>`;
+
+            rowsHtml += `
+              <tr class="hover:bg-neutral-50/50 transition-colors border-b border-neutral-100">
+                <td class="py-2.5 px-4 font-semibold text-neutral-850 flex items-center gap-2">
+                  <span class="text-base">🐄</span>
+                  <div>
+                    <span class="hover:text-emerald-700 transition-colors">${c.nome}</span>
+                    ${tagBadge}
+                  </div>
+                </td>
+                <td class="py-2.5 px-4 text-neutral-600 font-medium">${c.raca}</td>
+                <td class="py-2.5 px-4 font-mono text-neutral-500">${c.idade} <span class="text-xs">anos</span></td>
+                <td class="py-2.5 px-4 font-mono text-neutral-800 font-bold">${c.peso} <span class="text-xs text-neutral-500 font-normal">kg</span></td>
+                <td class="py-2.5 px-4">
+                  <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold ${statusClass}">
+                    <span class="w-1.5 h-1.5 rounded-full ${pulseColor} animate-pulse"></span>
+                    ${c.status}
+                  </span>
+                </td>
+                <td class="py-2.5 px-4 text-right">
+                  <div class="flex items-center justify-end gap-2.5">
+                    <button onclick="openCowModal('${c.id}')" class="p-1.5 rounded-lg border border-neutral-200 bg-neutral-50 text-neutral-500 hover:text-neutral-800 hover:bg-neutral-100 transition-all cursor-pointer" title="Editar Informações">
+                      <i data-lucide="pencil" class="w-3.5 h-3.5"></i>
+                    </button>
+                    <button onclick="deleteCow('${c.id}')" class="p-1.5 rounded-lg border border-rose-200 bg-rose-50 text-rose-500 hover:text-rose-700 hover:bg-rose-100 transition-all cursor-pointer" title="Remover de registro">
+                      <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            `;
+          });
+          dom.cowsTableBody.innerHTML = rowsHtml;
+        }
+        lucide.createIcons();
+      }
+
+      // Filter trigger
+      function handleCowFilter() {
+        cowSearchQuery = document.getElementById("cow-search").value;
+        cowStatusFilter = document.getElementById("cow-status-filter").value;
+        renderCowsTable();
+      }
+
+      // Clear cow filters
+      function clearCowFilters() {
+        document.getElementById("cow-search").value = "";
+        document.getElementById("cow-status-filter").value = "Todos";
+        cowSearchQuery = "";
+        cowStatusFilter = "Todos";
+        renderCowsTable();
+        showToast("Filtros redefinidos", "info");
+      }
+
+      // Delete cow
+      function deleteCow(id) {
+        const cow = cows.find(c => c.id === id);
+        if (!cow) return;
+
+        if (confirm(`Tem certeza de que deseja remover a vaquinha "${cow.nome}" do rebanho?`)) {
+          cows = cows.filter(c => c.id !== id);
+          localStorage.setItem("vaquinhas_felizes_cows", JSON.stringify(cows));
+          showToast(`Vaquinha "${cow.nome}" removida.`, 'info');
+          renderCowsTable();
+          updateFarmerMetrics();
+        }
+      }
+
+      // Open Modal to Add/Edit cow
+      function openCowModal(id = null) {
+        dom.cowForm.reset();
+        
+        if (id) {
+          // Editing existing
+          const cow = cows.find(c => c.id === id);
+          if (!cow) return;
+          
+          document.getElementById("cow-id").value = cow.id;
+          document.getElementById("cow-name").value = cow.nome;
+          document.getElementById("cow-breed").value = cow.raca;
+          document.getElementById("cow-status").value = cow.status;
+          document.getElementById("cow-age").value = cow.idade;
+          document.getElementById("cow-weight").value = cow.peso;
+          
+          dom.cowModalTitle.textContent = "Editar Vaquinha";
+        } else {
+          // Creating new
+          document.getElementById("cow-id").value = "";
+          dom.cowModalTitle.textContent = "Cadastrar Vaquinha";
+        }
+        
+        dom.cowModal.classList.remove("hidden");
+        lucide.createIcons();
+      }
+
+      // Close Modal
+      function closeCowModal() {
+        dom.cowModal.classList.add("hidden");
+      }
+
+      // Save cow (Form submit)
+      function saveCow(e) {
+        e.preventDefault();
+        const id = document.getElementById("cow-id").value;
+        const name = document.getElementById("cow-name").value.trim();
+        const breed = document.getElementById("cow-breed").value.trim();
+        const status = document.getElementById("cow-status").value;
+        const age = parseFloat(document.getElementById("cow-age").value);
+        const weight = parseInt(document.getElementById("cow-weight").value);
+
+        if (!name || !breed || isNaN(age) || isNaN(weight)) {
+          showToast("Por favor, preencha todos os campos corretamente.", "error");
+          return;
+        }
+
+        if (id) {
+          // Edit operation
+          cows = cows.map(c => c.id === id ? { ...c, nome: name, raca: breed, status, idade: age, peso: weight } : c);
+          showToast(`Dados de "${name}" atualizados!`, 'success');
+        } else {
+          // Create operation
+          const newCow = {
+            id: Date.now().toString(),
+            nome: name,
+            raca: breed,
+            status,
+            idade: age,
+            peso: weight
+          };
+          cows.push(newCow);
+          showToast(`"${name}" cadastrada com sucesso!`, 'success');
+        }
+
+        localStorage.setItem("vaquinhas_felizes_cows", JSON.stringify(cows));
+        closeCowModal();
+        renderCowsTable();
+        updateFarmerMetrics();
+      }
+
+
+      /* ============================================= */
+      /* FARMERS / PRODUCERS CONTROLLERS (ADMIN VIEW) */
+      /* ============================================= */
+
+      // Calculate state metrics for Admin
+      function updateAdminMetrics() {
+        const totalFarmers = farmers.length;
+        
+        // Sum of all cows dynamically matching simulated counts
+        const baseCowsCount = farmers.reduce((sum, f) => sum + parseInt(f.vaquinhasCount || 0), 0);
+        
+        // Account for any additions our current farmer made
+        const activeFarmsCount = farmers.filter(f => f.status === "Ativo").length;
+
+        document.getElementById("metric-admin-farmers").textContent = totalFarmers;
+        document.getElementById("metric-admin-cows").textContent = baseCowsCount;
+        document.getElementById("metric-admin-farms").textContent = activeFarmsCount;
+
+        const activePercentage = totalFarmers > 0 ? Math.round((activeFarmsCount / totalFarmers) * 100) : 0;
+        document.getElementById("metric-admin-active-percentage").textContent = `${activePercentage}% propriedades ativas`;
+      }
+
+      // Render Admin Farmers List
+      function renderFarmersTable() {
+        const filtered = farmers.filter(f => {
+          return f.nome.toLowerCase().includes(farmerSearchQuery.toLowerCase()) || 
+                 f.fazenda.toLowerCase().includes(farmerSearchQuery.toLowerCase()) || 
+                 f.email.toLowerCase().includes(farmerSearchQuery.toLowerCase());
+        });
+
+        if (filtered.length === 0) {
+          dom.farmersTableBody.innerHTML = "";
+          dom.farmersEmptyState.classList.remove("hidden");
+        } else {
+          dom.farmersEmptyState.classList.add("hidden");
+          
+          let rowsHtml = "";
+          filtered.forEach(f => {
+            const statusClass = f.status === "Ativo" 
+              ? "bg-emerald-50 text-emerald-700 border border-emerald-200" 
+              : "bg-neutral-50 text-neutral-600 border border-neutral-200";
+            
+            const pulseColor = f.status === "Ativo" ? "bg-emerald-500" : "bg-neutral-400";
+
+            rowsHtml += `
+              <tr class="hover:bg-neutral-50/50 transition-colors border-b border-neutral-100">
+                <td class="py-2.5 px-4">
+                  <div class="flex items-center gap-3">
+                    <div class="w-8 h-8 rounded-xl bg-neutral-100 flex items-center justify-center text-sm font-semibold text-neutral-700 border border-neutral-200">
+                      ${f.nome.charAt(0)}
+                    </div>
+                    <div>
+                      <span class="font-semibold text-neutral-800 block text-sm">${f.nome}</span>
+                      <span class="text-xs text-neutral-500 font-mono">${f.email}</span>
+                    </div>
+                  </div>
+                </td>
+                <td class="py-2.5 px-4 text-neutral-600 font-medium text-sm">${f.fazenda}</td>
+                <td class="py-2.5 px-4 font-mono font-bold text-neutral-500 text-sm">
+                  <span class="text-neutral-800 text-base mr-1 font-bold">${f.vaquinhasCount}</span> cabeças
+                </td>
+                <td class="py-2.5 px-4">
+                  <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold ${statusClass}">
+                    <span class="w-1.5 h-1.5 rounded-full ${pulseColor}"></span>
+                    ${f.status}
+                  </span>
+                </td>
+                <td class="py-2.5 px-4 text-right">
+                  <div class="flex items-center justify-end gap-2.5">
+                    <button onclick="toggleFarmerStatus('${f.id}')" class="px-2.5 py-1 rounded-lg border border-neutral-200 bg-neutral-50 text-xs font-semibold text-neutral-600 hover:text-neutral-900 hover:bg-neutral-100 transition-all flex items-center gap-1 cursor-pointer" title="Alternar atividade">
+                      <i data-lucide="refresh-cw" class="w-3 h-3"></i> Alternar
+                    </button>
+                    <button onclick="deleteFarmer('${f.id}')" class="p-1.5 rounded-lg border border-rose-200 bg-rose-50 text-rose-500 hover:text-rose-700 hover:bg-rose-100 transition-all cursor-pointer" title="Remover Produtor">
+                      <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            `;
+          });
+          dom.farmersTableBody.innerHTML = rowsHtml;
+        }
+        lucide.createIcons();
+      }
+
+      // Filter admin search
+      function handleFarmerFilter() {
+        farmerSearchQuery = document.getElementById("farmer-search").value;
+        renderFarmersTable();
+      }
+
+      // Toggle Active / Inactive Status
+      function toggleFarmerStatus(id) {
+        const farmer = farmers.find(f => f.id === id);
+        if (!farmer) return;
+
+        farmer.status = farmer.status === "Ativo" ? "Inativo" : "Ativo";
+        localStorage.setItem("vaquinhas_felizes_farmers", JSON.stringify(farmers));
+        showToast(`Status da fazenda "${farmer.fazenda}" alterado para ${farmer.status}.`, 'info');
+        renderFarmersTable();
+        updateAdminMetrics();
+      }
+
+      // Delete farmer
+      function deleteFarmer(id) {
+        const farmer = farmers.find(f => f.id === id);
+        if (!farmer) return;
+
+        if (confirm(`Excluir permanentemente o produtor "${farmer.nome}" e sua fazenda "${farmer.fazenda}"?`)) {
+          farmers = farmers.filter(f => f.id !== id);
+          localStorage.setItem("vaquinhas_felizes_farmers", JSON.stringify(farmers));
+          showToast(`Produtor "${farmer.nome}" excluído.`, 'info');
+          renderFarmersTable();
+          updateAdminMetrics();
+        }
+      }
+
+      // Open Farmer Modal
+      function openFarmerModal() {
+        dom.farmerForm.reset();
+        document.getElementById("farmer-id").value = "";
+        dom.farmerModalTitle.textContent = "Cadastrar Produtor Rural";
+        dom.farmerModal.classList.remove("hidden");
+        lucide.createIcons();
+      }
+
+      // Close Farmer Modal
+      function closeFarmerModal() {
+        dom.farmerModal.classList.add("hidden");
+      }
+
+      // Save farmer
+      function saveFarmer(e) {
+        e.preventDefault();
+        const name = document.getElementById("farmer-name-field").value.trim();
+        const email = document.getElementById("farmer-email-field").value.trim().toLowerCase();
+        const property = document.getElementById("farmer-property-field").value.trim();
+        const status = document.getElementById("farmer-status-field").value;
+
+        if (!name || !email || !property) {
+          showToast("Todos os campos de cadastro de produtor são obrigatórios.", "error");
+          return;
+        }
+
+        // Email uniqueness check
+        const emailTaken = farmers.some(f => f.email === email);
+        if (emailTaken) {
+          showToast("E-mail já cadastrado para outro produtor.", "error");
+          return;
+        }
+
+        const newFarmer = {
+          id: Date.now().toString(),
+          nome: name,
+          email,
+          fazenda: property,
+          vaquinhasCount: 0,
+          status
+        };
+
+        farmers.push(newFarmer);
+        localStorage.setItem("vaquinhas_felizes_farmers", JSON.stringify(farmers));
+        
+        // Also register credentials into simulation database
+        users.push({
+          email,
+          senha: "123456",
+          tipo: "fazendeiro",
+          nome: name
+        });
+
+        closeFarmerModal();
+        renderFarmersTable();
+        updateAdminMetrics();
+        showToast(`Produtor "${name}" cadastrado! Acesso liberado com senha 123456.`, 'success');
+      }
+
+      // App Initial Setup
+      window.onload = () => {
+        // Hydrate navigation context and load active views
+        if (currentUser) {
+          navigateTo(currentUser.tipo);
+        } else {
+          navigateTo('landing');
+        }
+      };
+    </script>
+  </body>
+</html>

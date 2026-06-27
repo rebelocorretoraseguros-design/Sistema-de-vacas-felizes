@@ -1,0 +1,6 @@
+{
+  "name": "Vaquinhas Felizes",
+  "description": "Plataforma premium e moderna de gestão inteligente de bovinos para fazendeiros com design Glassmorphism.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
